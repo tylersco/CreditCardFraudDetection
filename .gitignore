@@ -6,6 +6,9 @@ __pycache__/
 # C extensions
 *.so
 
+# Ensure data isn't added to git
+*.csv
+
 # Distribution / packaging
 .Python
 env/
