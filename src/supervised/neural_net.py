@@ -27,17 +27,25 @@ Y1 = tf.nn.relu(tf.matmul(X, W1) + B1)
 Y2 = tf.nn.relu(tf.matmul(Y1, W2) + B2)
 Y = tf.matmul(Y1, W3) + B3
 
+Y_pred = tf.nn.sigmoid(Y)
+Y_pred_round = tf.round(Y_pred)
+
 # Placeholder for correct answers
 Y_ = tf.placeholder(tf.float32, [None, O])
 
-is_correct = tf.equal(tf.round(tf.nn.sigmoid(Y)), Y_)
+# Different evaluation metrics
+is_correct = tf.equal(Y_pred_round, Y_)
 accuracy = tf.reduce_mean(tf.cast(is_correct, tf.float32))
+roc_auc = tf.metrics.auc(Y_, Y_pred)
+pr_auc = tf.metrics.auc(Y_, Y_pred, curve='PR')
+confusion_matrix = tf.contrib.metrics.confusion_matrix(labels=tf.squeeze(Y_), predictions=tf.squeeze(Y_pred_round), num_classes=2)
 
 lr = tf.placeholder(tf.float32)
-cost = tf.reduce_mean(tf.nn.weighted_cross_entropy_with_logits(logits=Y, targets=Y_, pos_weight=0.7))
+cost = tf.reduce_mean(tf.nn.weighted_cross_entropy_with_logits(logits=Y, targets=Y_, pos_weight=0.9))
 optimizer = tf.train.AdamOptimizer(learning_rate=lr).minimize(cost)
 
 init = tf.global_variables_initializer()
+init2 = tf.local_variables_initializer()
 
 with tf.Session() as sess:
 
@@ -54,10 +62,11 @@ with tf.Session() as sess:
     y_test = np.concatenate((y_gen_test, y_fra_test))
 
     learning_rate = 0.00001
-    epochs = 150
+    epochs = 300
     minibatch_size = 1024
 
     sess.run(init)
+    sess.run(init2)
 
     for epoch in range(epochs):
         # Shuffle the data
@@ -73,8 +82,9 @@ with tf.Session() as sess:
             sess.run(optimizer, feed_dict=train_data)
 
         train_data = {X: x_train, Y_: y_train}
-        acc, c = sess.run([accuracy, cost], feed_dict=train_data)
-        print('Train accuracy: {0}, Cost: {1}'.format(acc, c))
+        acc, c, auroc, auprc, cf_matrix  = sess.run([accuracy, cost, roc_auc, pr_auc, confusion_matrix], feed_dict=train_data)
+        print('Train accuracy: {0}, Cost: {1}, AUROC: {2}, AUPRC: {3}'.format(acc, c, auroc, auprc))
+        print(cf_matrix, '\n')
 
 
     #test_data = {X: X_test_arr, Y_: y_test_arr}
