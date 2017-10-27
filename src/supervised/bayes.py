@@ -56,12 +56,6 @@ for each in data_means:
     frauds_variance.append(data_variance[each][data_variance.index == 1].values[0])
 
 for index, row in df.iterrows():
-    # if index > 10:
-    #     break
-    # print(type(row))
-    #
-    # print(row["Class"])
-
 
     prob_fraud = 1
     for data, var, mean in zip(row, frauds_variance, frauds_mean):
