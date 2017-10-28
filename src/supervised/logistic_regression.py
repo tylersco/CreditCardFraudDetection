@@ -20,8 +20,6 @@ class LogisticRegression:
 
         confusion = metrics.confusion_matrix(y, results)
 
-
-
         return results, accuracy, confusion
 
 
