@@ -5,6 +5,7 @@ References:
 https://seaborn.pydata.org/tutorial/distributions.html
 https://matplotlib.org/gallery/lines_bars_and_markers/markevery_demo.html#sphx-glr-gallery-lines-bars-and-markers-markevery-demo-py
 https://matplotlib.org/users/gridspec.html
+https://www.kaggle.com/currie32/predicting-fraud-with-tensorflow
 """
 
 import pandas as pd
