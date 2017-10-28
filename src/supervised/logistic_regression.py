@@ -1,13 +1,11 @@
 import os
 import pandas as pd
-from sklearn import linear_model
+from sklearn import linear_model, metrics
 
 
 class LogisticRegression:
 
     def logreg(self, X, y):
-
-        results = {}
 
         # According to online sources, LogisticRegression can handle multiple classes ootb
         log_reg_model = linear_model.LogisticRegression()
@@ -16,16 +14,15 @@ class LogisticRegression:
 
         results = log_reg_model.predict(X)
 
+        print(results)
+
         accuracy = log_reg_model.score(X,y)
 
-        # for output in results:
-        #     if output != 0:
-        #         print(output)
-
-        return (results, accuracy)
+        confusion = metrics.confusion_matrix(y, results)
 
 
 
+        return results, accuracy, confusion
 
 
 def main():
@@ -40,12 +37,12 @@ def main():
 
     logistic_regression = LogisticRegression()
 
-    total = logistic_regression.logreg(X,y)
+    total = logistic_regression.logreg(X, y)
+    print("dick")
     print(total[0])
     print(total[1])
+    print(total[2])
 
-    # print("Number of positives = " + str(len(results)))
-    # print(logistic_regression.accuracy())
 
 
 
