@@ -1,14 +1,20 @@
 import pandas as pd
 import numpy as np
 import os
+import sys
 
-df = pd.read_csv(path,sep=",")
-df1 = df[2:27]
+df = pd.read_csv(sys.argv[1], sep=",")
+df1 = df.iloc[:,1:29]
 
 res = []
 
-for i in range(2, 28):
-    res.append(np.dot(df1[i], df1))
-product = np.dot(df1,df1.T)
-# print("Vector1: {0} , Vector2:{1}".format(vector,vector1))
-print(product)
+for i in range(0, len(df1.iloc[0,:])):
+    r = []
+    for j in range(i + 1, len(df1.iloc[0,:])):
+        r.append(df1.iloc[:,i].dot(df1.iloc[:,j]))
+
+    if r:
+        res.append(r)
+
+# These values are all really close to 0, which means that the columns are all orthogonal to eachother
+print(res[0])
