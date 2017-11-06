@@ -21,11 +21,16 @@ class LogisticRegression:
 
         results = log_reg_model.predict(test.drop("Class", axis=1).drop("Time", axis=1))
 
-        print(results)
-
         accuracy = log_reg_model.score(test.drop("Class", axis=1).drop("Time", axis=1), test["Class"])
 
         confusion = metrics.confusion_matrix(test["Class"], results)
+
+        # AUC and ROC recall measures
+
+        fpr, tpr, thresholds = metrics.roc_curve(test["Class"], results)
+        x = metrics.auc(fpr, tpr)
+
+        print(x)
 
         return results, accuracy, confusion
 
