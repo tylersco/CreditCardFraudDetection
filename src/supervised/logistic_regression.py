@@ -8,10 +8,14 @@ class LogisticRegression:
     def logreg(self, X, y, test):
 
         # Associate higher weight (of 2) with the positive class:
-        weights = {1: 2, 0: 1}
+        weights = {1: 5, 0: 1}
 
-        # According to online sources, LogisticRegression can handle multiple classes ootb
-        log_reg_model = linear_model.LogisticRegression(class_weight=weights)
+
+        '''
+        The “balanced” mode uses the values of y to automatically adjust weights inversely proportional to class 
+            frequencies in the input data as n_samples / (n_classes * np.bincount(y)).
+        '''
+        log_reg_model = linear_model.LogisticRegression(class_weight='balanced')
 
         log_reg_model.fit(X, y)
 
