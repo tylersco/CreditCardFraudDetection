@@ -81,7 +81,7 @@ def main():
     path += '/data/creditcard.csv'
     df = pd.read_csv(path)
 
-    #Create train and test groups
+    # Create train and test groups
     train, test = model_selection.train_test_split(df)
 
     # X and Y used for sklearn logreg
