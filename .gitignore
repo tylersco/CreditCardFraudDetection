@@ -12,6 +12,10 @@ __pycache__/
 # Ensure data isn't added to git
 *.csv
 
+# pycharm specific files
+*.idea
+*.DS_Store
+
 # Distribution / packaging
 .Python
 env/
