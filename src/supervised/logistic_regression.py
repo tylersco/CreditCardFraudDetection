@@ -81,6 +81,10 @@ def main():
     path += '/data/creditcard.csv'
     df = pd.read_csv(path)
 
+    # Drop the attributes deemed useless in our preprocessing/initial analysis
+    df = df.drop("V13", axis=1).drop("V15", axis=1).drop("V20", axis=1).drop("V22", axis=1).drop("V23", axis=1)\
+        .drop("V24", axis=1).drop("V25", axis=1).drop("V26", axis=1).drop("V28", axis=1)
+
     # Create train and test groups
     train, test = model_selection.train_test_split(df)
 
