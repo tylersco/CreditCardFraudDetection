@@ -1,4 +1,5 @@
 import os
+import sys
 import pandas as pd
 from sklearn import linear_model, metrics, model_selection
 import matplotlib.pyplot as plt
@@ -48,13 +49,15 @@ class LogisticRegression:
         weights = {1: 5, 0: 1}
 
         '''
-        The “balanced” mode uses the values of y to automatically adjust weights inversely proportional to class 
+        The “balanced” mode uses the values of y to automatically adjust weights inversely proportional to class
             frequencies in the input data as n_samples / (n_classes * np.bincount(y)).
         '''
-        log_reg_model = linear_model.LogisticRegression(class_weight='balanced')
+        class_weights = {0: 1, 1: 5}
+        log_reg_model = linear_model.LogisticRegression(class_weight=class_weights)
         log_reg_model.fit(X, y)
 
-        y_score = log_reg_model.decision_function(test.drop("Class", axis=1).drop("Time", axis=1))
+        #y_score = log_reg_model.decision_function(test.drop("Class", axis=1).drop("Time", axis=1))
+        y_score = log_reg_model.predict_proba(test.drop("Class", axis=1).drop("Time", axis=1))[:,1]
 
         results = log_reg_model.predict(test.drop("Class", axis=1).drop("Time", axis=1))
         accuracy = log_reg_model.score(test.drop("Class", axis=1).drop("Time", axis=1), test["Class"])
@@ -63,11 +66,18 @@ class LogisticRegression:
         # AUC and ROC measures
         fpr, tpr, thresholds = metrics.roc_curve(test["Class"], results)
         auc = metrics.auc(fpr, tpr)
+        precision = metrics.precision_score(test["Class"], results)
+        recall = metrics.recall_score(test["Class"], results)
+        f_score = metrics.f1_score(test["Class"], results)
 
         # Precision recall measure
         self.plot_precision_recall(test["Class"], y_score)
 
-        print(auc)
+        print('AUROC:', auc)
+        print('Accuracy:', accuracy)
+        print('Precision:', precision)
+        print('Recall:', recall)
+        print('F Score:', f_score)
 
         # Plot ROC
         self.plotROC(fpr, tpr, auc)
@@ -77,9 +87,12 @@ class LogisticRegression:
 
 def main():
     # Create dataframe
-    path = os.path.abspath(os.path.join(os.getcwd(), os.pardir))
-    path += '/data/creditcard.csv'
-    df = pd.read_csv(path)
+    #path = os.path.abspath(os.path.join(os.getcwd(), os.pardir))
+    #path += '/data/creditcard.csv'
+    #df = pd.read_csv(path)
+
+    # Read in data as command line argument
+    df = pd.read_csv(sys.argv[1])
 
     # Drop the attributes deemed useless in our preprocessing/initial analysis
     df = df.drop("V13", axis=1).drop("V15", axis=1).drop("V20", axis=1).drop("V22", axis=1).drop("V23", axis=1)\
