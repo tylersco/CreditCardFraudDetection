@@ -49,7 +49,7 @@ def naive_bayes(x_train,x_test,y_train,y_test):
     plt.ylabel('Precision')
     plt.ylim([0.0, 1.05])
     plt.xlim([0.0, 1.0])
-    plt.title('Logistic Regression 2-class Precision-Recall curve: AP={0:0.2f}'.format(
+    plt.title('Naive Bayes 2-class Precision-Recall curve: AP={0:0.2f}'.format(
         average_precision))
 
     # Plot ROC
@@ -62,7 +62,7 @@ def naive_bayes(x_train,x_test,y_train,y_test):
     plt.ylim([0.0, 1.05])
     plt.xlabel('False Positive Rate')
     plt.ylabel('True Positive Rate')
-    plt.title('Logistic Regression ROC')
+    plt.title('Naive Bayes ROC')
     plt.legend(loc="lower right")
     plt.show()
 
