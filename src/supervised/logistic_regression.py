@@ -1,4 +1,4 @@
-import os
+
 import sys
 import pandas as pd
 from sklearn import linear_model, metrics, model_selection
@@ -86,10 +86,6 @@ class LogisticRegression:
 
 
 def main():
-    # Create dataframe
-    #path = os.path.abspath(os.path.join(os.getcwd(), os.pardir))
-    #path += '/data/creditcard.csv'
-    #df = pd.read_csv(path)
 
     # Read in data as command line argument
     df = pd.read_csv(sys.argv[1])
