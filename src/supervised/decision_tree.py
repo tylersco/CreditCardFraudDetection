@@ -1,11 +1,44 @@
 import sys
 import pandas as pd
 from sklearn import metrics, model_selection
-
+import matplotlib.pyplot as plt
 
 from sklearn import tree
 
 class DecisionTree:
+    def plot_precision_recall(self, y_test, y_score):
+        average_precision = metrics.average_precision_score(y_test, y_score)
+
+        print('Average precision-recall score: {0:0.2f}'.format(
+            average_precision))
+
+        precision, recall, _ = metrics.precision_recall_curve(y_test, y_score)
+
+        plt.step(recall, precision, color='b', alpha=0.2,
+                 where='post')
+        plt.fill_between(recall, precision, step='post', alpha=0.2,
+                         color='b')
+
+        plt.xlabel('Recall')
+        plt.ylabel('Precision')
+        plt.ylim([0.0, 1.05])
+        plt.xlim([0.0, 1.0])
+        plt.title('Decision Tree 2-class Precision-Recall curve: AP={0:0.2f}'.format(
+            average_precision))
+
+    def plotROC(self, fpr, tpr, auc):
+        plt.figure()
+        lw = 2
+        plt.plot(fpr, tpr, color='darkorange',
+                 lw=lw, label='ROC curve (area = %0.2f)' % auc)
+        plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
+        plt.xlim([0.0, 1.0])
+        plt.ylim([0.0, 1.05])
+        plt.xlabel('False Positive Rate')
+        plt.ylabel('True Positive Rate')
+        plt.title('Decision Tree ROC')
+        plt.legend(loc="lower right")
+        plt.show()
 
     def decisionTree(self, X, y, test):
         decision_tree = tree.DecisionTreeClassifier()
@@ -30,6 +63,12 @@ class DecisionTree:
         print('Precision:', precision)
         print('Recall:', recall)
         print('F Score:', f_score)
+
+        # Precision recall measure
+        self.plot_precision_recall(test["Class"], y_score)
+
+        # Plot ROC
+        self.plotROC(fpr, tpr, auc)
 
         return results, accuracy, confusion
 
