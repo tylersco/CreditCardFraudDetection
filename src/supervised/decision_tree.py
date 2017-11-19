@@ -41,7 +41,21 @@ class DecisionTree:
         plt.show()
 
     def decisionTree(self, X, y, test):
-        decision_tree = tree.DecisionTreeClassifier()
+
+        '''
+            setting criterion to entropy decreased the model precision recall score to 54 percent.
+
+            setting splitter to random decreased the model precision recall score to 53 percent.
+
+            setting min_samples to 4 decreased the model pr score, however raising it past 8 seems to keep
+                PR above 55 percent.
+        '''
+
+        class_weights = {0: 1, 1: 5}
+
+        decision_tree = tree.DecisionTreeClassifier(criterion="gini", splitter="best", min_samples_split=60,
+                                                    class_weight=class_weights)
+
         clf = decision_tree.fit(X, y)
 
         # y_score = log_reg_model.decision_function(test.drop("Class", axis=1).drop("Time", axis=1))
