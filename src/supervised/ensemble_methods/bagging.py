@@ -21,7 +21,7 @@ class Bagging:
         plt.ylabel('Precision')
         plt.ylim([0.0, 1.05])
         plt.xlim([0.0, 1.0])
-        plt.title('Decision Tree 2-class Precision-Recall curve: AP={0:0.2f}'.format(
+        plt.title('Bagging 2-class Precision-Recall curve: AP={0:0.2f}'.format(
             average_precision))
 
     def plotROC(self, fpr, tpr, auc):
@@ -34,7 +34,7 @@ class Bagging:
         plt.ylim([0.0, 1.05])
         plt.xlabel('False Positive Rate')
         plt.ylabel('True Positive Rate')
-        plt.title('Decision Tree ROC')
+        plt.title('Bagging ROC')
         plt.legend(loc="lower right")
         plt.show()
 
@@ -42,11 +42,17 @@ class Bagging:
 
         class_weights = {0: 1, 1: 5}
 
-        bag = ensemble.BaggingClassifier()
+        '''
+        warm_start reuses the solution of the previous call to fit and add more estimators to the ensemble, 
+            otherwise, just fit a whole new ensemble.
+            
+        n_jobs -1 uses all available cores
+        '''
+
+        bag = ensemble.BaggingClassifier(warm_start=True, n_jobs=-1)
 
         clf = bag.fit(X, y)
 
-        # y_score = log_reg_model.decision_function(test.drop("Class", axis=1).drop("Time", axis=1))
         y_score = bag.predict_proba(test.drop("Class", axis=1).drop("Time", axis=1))[:, 1]
 
         results = bag.predict(test.drop("Class", axis=1).drop("Time", axis=1))
@@ -90,9 +96,9 @@ def main():
     X = train.drop("Class", axis=1).drop("Time", axis=1)
     y = train["Class"]
 
-    decision_tree = Bagging()
+    baggingClassifier = Bagging()
 
-    total = decision_tree.bagging(X, y, test)
+    total = baggingClassifier.bagging(X, y, test)
     print(total[0])
     print(total[1])
     print(total[2])
