@@ -1,44 +1,11 @@
 import sys
+sys.path.append('../')
 import pandas as pd
 from sklearn import metrics, model_selection, ensemble
 import matplotlib.pyplot as plt
+from classifier import Classifier
 
-
-class Boosting:
-    def plot_precision_recall(self, y_test, y_score):
-        average_precision = metrics.average_precision_score(y_test, y_score)
-
-        print('Average precision-recall score: {0:0.2f}'.format(
-            average_precision))
-
-        precision, recall, _ = metrics.precision_recall_curve(y_test, y_score)
-
-        plt.step(recall, precision, color='b', alpha=0.2,
-                 where='post')
-        plt.fill_between(recall, precision, step='post', alpha=0.2,
-                         color='b')
-
-        plt.xlabel('Recall')
-        plt.ylabel('Precision')
-        plt.ylim([0.0, 1.05])
-        plt.xlim([0.0, 1.0])
-        plt.title('AdaBoost 2-class Precision-Recall curve: AP={0:0.2f}'.format(
-            average_precision))
-
-    def plotROC(self, fpr, tpr, auc):
-        plt.figure()
-        lw = 2
-        plt.plot(fpr, tpr, color='darkorange',
-                 lw=lw, label='ROC curve (area = %0.2f)' % auc)
-        plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
-        plt.xlim([0.0, 1.0])
-        plt.ylim([0.0, 1.05])
-        plt.xlabel('False Positive Rate')
-        plt.ylabel('True Positive Rate')
-        plt.title('AdaBoost ROC')
-        plt.legend(loc="lower right")
-        plt.show()
-
+class Boosting(Classifier):
     def adaboost(self, X, y, test):
         class_weights = {0: 1, 1: 5}
 
@@ -49,29 +16,23 @@ class Boosting:
         y_score = boost.predict_proba(test.drop("Class", axis=1).drop("Time", axis=1))[:, 1]
 
         results = boost.predict(test.drop("Class", axis=1).drop("Time", axis=1))
-        accuracy = boost.score(test.drop("Class", axis=1).drop("Time", axis=1), test["Class"])
-        confusion = metrics.confusion_matrix(test["Class"], results)
 
-        # AUC and ROC measures
-        fpr, tpr, thresholds = metrics.roc_curve(test["Class"], results)
-        auc = metrics.auc(fpr, tpr)
-        precision = metrics.precision_score(test["Class"], results)
-        recall = metrics.recall_score(test["Class"], results)
-        f_score = metrics.f1_score(test["Class"], results)
+        # Get metrics
+        mets = self.compute_metrics(test["Class"], results, y_score)
 
-        print('AUROC:', auc)
-        print('Accuracy:', accuracy)
-        print('Precision:', precision)
-        print('Recall:', recall)
-        print('F Score:', f_score)
+        print('AUROC:', mets['auroc'])
+        print('Accuracy:', mets['accuracy'])
+        print('Precision:', mets['precision'])
+        print('Recall:', mets['recall'])
+        print('F Score:', mets['f'])
+        print('Average Precision', mets['ap'])
+        print(mets['confusion'])
 
         # Precision recall measure
-        self.plot_precision_recall(test["Class"], y_score)
+        self.plot_precision_recall(test["Class"], y_score, 'Boosting')
 
         # Plot ROC
-        self.plotROC(fpr, tpr, auc)
-
-        return results, accuracy, confusion
+        self.plotROC(mets['fpr'], mets['tpr'], mets['auroc'], 'Boosting')
 
 
 def main():
@@ -91,11 +52,7 @@ def main():
 
     adaBoost = Boosting()
 
-    total = adaBoost.adaboost(X, y, test)
-    print(total[0])
-    print(total[1])
-    print(total[2])
-
+    adaBoost.adaboost(X, y, test)
 
 if __name__ == '__main__':
     main()
