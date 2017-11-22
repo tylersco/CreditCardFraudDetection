@@ -7,9 +7,6 @@ class Classifier:
     def plot_precision_recall(self, y_test, y_score, model_name):
         average_precision = metrics.average_precision_score(y_test, y_score)
 
-        print('Average precision-recall score: {0:0.2f}'.format(
-            average_precision))
-
         precision, recall, _ = metrics.precision_recall_curve(y_test, y_score)
 
         plt.step(recall, precision, color='b', alpha=0.2,

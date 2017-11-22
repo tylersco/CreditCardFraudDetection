@@ -55,10 +55,10 @@ with tf.Session() as sess:
     x_genuine, y_genuine, x_fraudulent, y_fraudulent = load_data(sys.argv[1])
 
     x_gen_train, x_gen_test, y_gen_train, y_gen_test = train_test_split(x_genuine, y_genuine, test_size=0.2)
-    x_gen_train, x_gen_valid, y_gen_train, y_gen_valid = train_test_split(x_gen_train, y_gen_train, test_size=0.2)
+    x_gen_train, x_gen_valid, y_gen_train, y_gen_valid = train_test_split(x_gen_train, y_gen_train, test_size=0.25)
 
     x_fra_train, x_fra_test, y_fra_train, y_fra_test = train_test_split(x_fraudulent, y_fraudulent, test_size=0.2)
-    x_fra_train, x_fra_valid, y_fra_train, y_fra_valid = train_test_split(x_fra_train, y_fra_train, test_size=0.2)
+    x_fra_train, x_fra_valid, y_fra_train, y_fra_valid = train_test_split(x_fra_train, y_fra_train, test_size=0.25)
 
     x_train = np.concatenate((x_gen_train, x_fra_train))
     y_train = np.concatenate((y_gen_train, y_fra_train))

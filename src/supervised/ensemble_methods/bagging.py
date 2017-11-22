@@ -6,21 +6,50 @@ import matplotlib.pyplot as plt
 from classifier import Classifier
 
 class Bagging(Classifier):
-    def bagging(self, X, y, test):
+    def bagging(self, X, y, valid, test):
         '''
-        warm_start reuses the solution of the previous call to fit and add more estimators to the ensemble,
-            otherwise, just fit a whole new ensemble.
-
         n_jobs -1 uses all available cores
         '''
-        class_weights = {0: 1, 1: 5}
 
-        bag = ensemble.BaggingClassifier(warm_start=True, n_jobs=-1)
+        bag = ensemble.BaggingClassifier(n_estimators=30, bootstrap_features=True, n_jobs=-1)
 
         clf = bag.fit(X, y)
 
-        y_score = bag.predict_proba(test.drop("Class", axis=1).drop("Time", axis=1))[:, 1]
+        # TRAIN DATA
 
+        # y_score = bag.predict_proba(X)[:, 1]
+        # results = bag.predict(X)
+        #
+        # # Get metrics
+        # mets = self.compute_metrics(y, results, y_score)
+        #
+        # print('AUROC:', mets['auroc'])
+        # print('Accuracy:', mets['accuracy'])
+        # print('Precision:', mets['precision'])
+        # print('Recall:', mets['recall'])
+        # print('F Score:', mets['f'])
+        # print('Average Precision', mets['ap'])
+        # print(mets['confusion'])
+
+        # VALID DATA
+
+        # y_score = bag.predict_proba(valid.drop("Class", axis=1).drop("Time", axis=1))[:, 1]
+        # results = bag.predict(valid.drop("Class", axis=1).drop("Time", axis=1))
+        #
+        # # Get metrics
+        # mets = self.compute_metrics(valid["Class"], results, y_score)
+        #
+        # print('AUROC:', mets['auroc'])
+        # print('Accuracy:', mets['accuracy'])
+        # print('Precision:', mets['precision'])
+        # print('Recall:', mets['recall'])
+        # print('F Score:', mets['f'])
+        # print('Average Precision', mets['ap'])
+        # print(mets['confusion'])
+
+        # TEST DATA
+
+        y_score = bag.predict_proba(test.drop("Class", axis=1).drop("Time", axis=1))[:, 1]
         results = bag.predict(test.drop("Class", axis=1).drop("Time", axis=1))
 
         # Get metrics
@@ -50,7 +79,8 @@ def main():
         .drop("V24", axis=1).drop("V25", axis=1).drop("V26", axis=1).drop("V28", axis=1)
 
     # Create train and test groups
-    train, test = model_selection.train_test_split(df)
+    train, test = model_selection.train_test_split(df, test_size=0.2)
+    train, valid = model_selection.train_test_split(train, test_size=0.25)
 
     # X and Y used for sklearn logreg
     X = train.drop("Class", axis=1).drop("Time", axis=1)
@@ -58,7 +88,7 @@ def main():
 
     baggingClassifier = Bagging()
 
-    baggingClassifier.bagging(X, y, test)
+    baggingClassifier.bagging(X, y, valid, test)
 
 if __name__ == '__main__':
     main()

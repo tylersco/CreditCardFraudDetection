@@ -45,7 +45,7 @@ precision = tf.metrics.precision(Y_, Y_pred_round)
 #confusion_matrix = tf.contrib.metrics.confusion_matrix(labels=tf.squeeze(Y_), predictions=tf.squeeze(Y_pred_round), num_classes=2, name='confusion_matrix')
 
 lr = tf.placeholder(tf.float32)
-cost = tf.reduce_mean(tf.nn.weighted_cross_entropy_with_logits(logits=Y, targets=Y_, pos_weight=5))
+cost = tf.reduce_mean(tf.nn.weighted_cross_entropy_with_logits(logits=Y, targets=Y_, pos_weight=8))
 optimizer = tf.train.AdamOptimizer(learning_rate=lr).minimize(cost)
 
 init = tf.global_variables_initializer()
@@ -57,10 +57,10 @@ with tf.Session() as sess:
     x_genuine, y_genuine, x_fraudulent, y_fraudulent = load_data(sys.argv[1], [0, 13, 15, 20, 22, 23, 24, 25, 26, 28])
 
     x_gen_train, x_gen_test, y_gen_train, y_gen_test = train_test_split(x_genuine, y_genuine, test_size=0.2)
-    x_gen_train, x_gen_valid, y_gen_train, y_gen_valid = train_test_split(x_gen_train, y_gen_train, test_size=0.2)
+    x_gen_train, x_gen_valid, y_gen_train, y_gen_valid = train_test_split(x_gen_train, y_gen_train, test_size=0.25)
 
     x_fra_train, x_fra_test, y_fra_train, y_fra_test = train_test_split(x_fraudulent, y_fraudulent, test_size=0.2)
-    x_fra_train, x_fra_valid, y_fra_train, y_fra_valid = train_test_split(x_fra_train, y_fra_train, test_size=0.2)
+    x_fra_train, x_fra_valid, y_fra_train, y_fra_valid = train_test_split(x_fra_train, y_fra_train, test_size=0.25)
 
     x_train = np.concatenate((x_gen_train, x_fra_train))
     y_train = np.concatenate((y_gen_train, y_fra_train))
@@ -128,7 +128,6 @@ with tf.Session() as sess:
     print('Average Precision:', average_precision)
     print('F Score:', f_score)
     print('Test accuracy: {0}, Cost: {1}, AUROC: {2}, Recall: {3}, Precision: {4}'.format(acc, c, auroc, rec, prec) + '\n')
-
 
     precision, recall, _ = metrics.precision_recall_curve(y_test, pred)
     plt.step(recall, precision, color='b', alpha=0.2,
