@@ -3,20 +3,20 @@ import os
 import time
 import pandas as pd
 import numpy as np
-from sklearn import linear_model, metrics, model_selection
+from sklearn import svm, metrics, model_selection
 import matplotlib.pyplot as plt
 from classifier import Classifier
 
-class LogisticRegression(Classifier):
-    def logreg(self, X, y, valid, test):
+class support_Vector_Machine(Classifier):
+    def svm(self, X, y, valid, test):
         '''
         The “balanced” mode uses the values of y to automatically adjust weights inversely proportional to class
             frequencies in the input data as n_samples / (n_classes * np.bincount(y)).
         '''
         class_weights = {0: 1, 1: 8}
-        log_reg_model = linear_model.LogisticRegression(class_weight=class_weights, penalty='l2', C=10.0, max_iter=500)
+        svm_model = svm.SVC(class_weight=class_weights, C=10.0, max_iter=500,probability=True)
         start = time.time()
-        log_reg_model.fit(X, y)
+        svm_model.fit(X, y)
         end = time.time()
 
         # TRAIN DATA
@@ -53,8 +53,8 @@ class LogisticRegression(Classifier):
 
         # TEST DATA
 
-        y_score = log_reg_model.predict_proba(test.drop("Class", axis=1).drop("Time", axis=1))[:, 1]
-        results = log_reg_model.predict(test.drop("Class", axis=1).drop("Time", axis=1))
+        y_score = svm_model.predict_proba(test.drop("Class", axis=1).drop("Time", axis=1))[:, 1]
+        results = svm_model.predict(test.drop("Class", axis=1).drop("Time", axis=1))
 
         # Get metrics
         mets = self.compute_metrics(test["Class"], results, y_score)
@@ -99,7 +99,7 @@ def main():
         'time': []
     }
 
-    filepath = os.path.join('..', 'results', 'log_reg_results.txt')
+    filepath = os.path.join('..', 'results', 'svm.txt')
     replications = 20
     for i in range(replications):
         # Create train and test groups
@@ -110,8 +110,8 @@ def main():
         X = train.drop("Class", axis=1).drop("Time", axis=1)
         y = train["Class"]
 
-        logistic_regression = LogisticRegression()
-        metrics = logistic_regression.logreg(X, y, valid, test)
+        SVM = support_Vector_Machine()
+        metrics = SVM.svm(X, y, valid, test)
 
         results['accuracy'].append(metrics['accuracy'])
         results['precision'].append(metrics['precision'])

@@ -1,28 +1,28 @@
 import sys
+sys.path.append('../')
 import os
 import time
 import pandas as pd
 import numpy as np
-from sklearn import linear_model, metrics, model_selection
+from sklearn import metrics, model_selection, ensemble
 import matplotlib.pyplot as plt
 from classifier import Classifier
 
-class LogisticRegression(Classifier):
-    def logreg(self, X, y, valid, test):
+class RandomForest(Classifier):
+    def random_forest(self, X, y, valid, test):
         '''
-        The “balanced” mode uses the values of y to automatically adjust weights inversely proportional to class
-            frequencies in the input data as n_samples / (n_classes * np.bincount(y)).
+        n_jobs -1 uses all available cores
         '''
         class_weights = {0: 1, 1: 8}
-        log_reg_model = linear_model.LogisticRegression(class_weight=class_weights, penalty='l2', C=10.0, max_iter=500)
+        rf = ensemble.RandomForestClassifier(n_estimators=30, criterion='gini', min_samples_split=12, n_jobs=-1, class_weight=class_weights)
         start = time.time()
-        log_reg_model.fit(X, y)
+        rf.fit(X, y)
         end = time.time()
 
         # TRAIN DATA
 
-        # y_score = log_reg_model.predict_proba(X)[:, 1]
-        # results = log_reg_model.predict(X)
+        # y_score = rf.predict_proba(X)[:, 1]
+        # results = rf.predict(X)
         #
         # # Get metrics
         # mets = self.compute_metrics(y, results, y_score)
@@ -37,8 +37,8 @@ class LogisticRegression(Classifier):
 
         # VALID DATA
 
-        # y_score = log_reg_model.predict_proba(valid.drop("Class", axis=1).drop("Time", axis=1))[:, 1]
-        # results = log_reg_model.predict(valid.drop("Class", axis=1).drop("Time", axis=1))
+        # y_score = rf.predict_proba(valid.drop("Class", axis=1).drop("Time", axis=1))[:, 1]
+        # results = rf.predict(valid.drop("Class", axis=1).drop("Time", axis=1))
         #
         # # Get metrics
         # mets = self.compute_metrics(valid["Class"], results, y_score)
@@ -53,8 +53,8 @@ class LogisticRegression(Classifier):
 
         # TEST DATA
 
-        y_score = log_reg_model.predict_proba(test.drop("Class", axis=1).drop("Time", axis=1))[:, 1]
-        results = log_reg_model.predict(test.drop("Class", axis=1).drop("Time", axis=1))
+        y_score = rf.predict_proba(test.drop("Class", axis=1).drop("Time", axis=1))[:, 1]
+        results = rf.predict(test.drop("Class", axis=1).drop("Time", axis=1))
 
         # Get metrics
         mets = self.compute_metrics(test["Class"], results, y_score)
@@ -69,21 +69,20 @@ class LogisticRegression(Classifier):
         print(mets['confusion'], '\n')
 
         # Precision recall measure
-        #self.plot_precision_recall(test["Class"], y_score, 'Logistic Regression')
+        #self.plot_precision_recall(test["Class"], y_score, 'Random Forest')
 
         # Plot ROC
-        #self.plotROC(mets['fpr'], mets['tpr'], mets['auroc'], 'Logistic Regression')
+        #self.plotROC(mets['fpr'], mets['tpr'], mets['auroc'], 'Random Forest')
 
         return mets
 
 
 def main():
-
     # Read in data as command line argument
     df = pd.read_csv(sys.argv[1])
 
     # Drop the attributes deemed useless in our preprocessing/initial analysis
-    df = df.drop("V13", axis=1).drop("V15", axis=1).drop("V20", axis=1).drop("V22", axis=1).drop("V23", axis=1)\
+    df = df.drop("V13", axis=1).drop("V15", axis=1).drop("V20", axis=1).drop("V22", axis=1).drop("V23", axis=1) \
         .drop("V24", axis=1).drop("V25", axis=1).drop("V26", axis=1).drop("V28", axis=1)
 
     results = {
@@ -99,7 +98,7 @@ def main():
         'time': []
     }
 
-    filepath = os.path.join('..', 'results', 'log_reg_results.txt')
+    filepath = os.path.join('..', '..', 'results', 'random_forest_results.txt')
     replications = 20
     for i in range(replications):
         # Create train and test groups
@@ -110,8 +109,8 @@ def main():
         X = train.drop("Class", axis=1).drop("Time", axis=1)
         y = train["Class"]
 
-        logistic_regression = LogisticRegression()
-        metrics = logistic_regression.logreg(X, y, valid, test)
+        r_forest = RandomForest()
+        metrics = r_forest.random_forest(X, y, valid, test)
 
         results['accuracy'].append(metrics['accuracy'])
         results['precision'].append(metrics['precision'])

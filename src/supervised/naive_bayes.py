@@ -1,84 +1,134 @@
 import sys
-
 import os
+import time
 import pandas as pd
 import numpy as np
-sys.path.append('../data/')
+from sklearn import linear_model, metrics, model_selection
 from sklearn.naive_bayes import GaussianNB as GNB
-from sklearn.metrics import confusion_matrix as conf
-from sklearn import metrics
-from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
+from classifier import Classifier
+
+class NaiveBayes(Classifier):
+    def bayes(self, X, y, valid, test):
+        # Using data priors worked best
+        nb_model = GNB()
+        start = time.time()
+        nb_model.fit(X, y)
+        end = time.time()
+
+        # TRAIN DATA
+
+        # y_score = nb_model.predict_proba(X)[:, 1]
+        # results = nb_model.predict(X)
+        #
+        # # Get metrics
+        # mets = self.compute_metrics(y, results, y_score)
+        #
+        # print('AUROC:', mets['auroc'])
+        # print('Accuracy:', mets['accuracy'])
+        # print('Precision:', mets['precision'])
+        # print('Recall:', mets['recall'])
+        # print('F Score:', mets['f'])
+        # print('Average Precision', mets['ap'])
+        # print(mets['confusion'])
+
+        # VALID DATA
+
+        # y_score = nb_model.predict_proba(valid.drop("Class", axis=1).drop("Time", axis=1))[:, 1]
+        # results = nb_model.predict(valid.drop("Class", axis=1).drop("Time", axis=1))
+        #
+        # # Get metrics
+        # mets = self.compute_metrics(valid["Class"], results, y_score)
+        #
+        # print('AUROC:', mets['auroc'])
+        # print('Accuracy:', mets['accuracy'])
+        # print('Precision:', mets['precision'])
+        # print('Recall:', mets['recall'])
+        # print('F Score:', mets['f'])
+        # print('Average Precision', mets['ap'])
+        # print(mets['confusion'])
+
+        # TEST DATA
+
+        y_score = nb_model.predict_proba(test.drop("Class", axis=1).drop("Time", axis=1))[:, 1]
+        results = nb_model.predict(test.drop("Class", axis=1).drop("Time", axis=1))
+
+        # Get metrics
+        mets = self.compute_metrics(test["Class"], results, y_score)
+        mets['time'] = end - start
+
+        print('AUROC:', mets['auroc'])
+        print('Accuracy:', mets['accuracy'])
+        print('Precision:', mets['precision'])
+        print('Recall:', mets['recall'])
+        print('F Score:', mets['f'])
+        print('Average Precision', mets['ap'])
+        print(mets['confusion'], '\n')
+
+        # Precision recall measure
+        #self.plot_precision_recall(test["Class"], y_score, 'Naive Bayes')
+
+        # Plot ROC
+        #self.plotROC(mets['fpr'], mets['tpr'], mets['auroc'], 'Naive Bayes')
+
+        return mets
 
 
-def naive_bayes(x_train,x_test,y_train,y_test):
+def main():
 
-    test = GNB();
-    test.fit(x_train,y_train)
+    # Read in data as command line argument
+    df = pd.read_csv(sys.argv[1])
 
-    result = test.predict(x_test)
-    accuracy = test.score(x_test, y_test)
-    y_score = test.predict_proba(x_test)[:,1]
+    # Drop the attributes deemed useless in our preprocessing/initial analysis
+    df = df.drop("V13", axis=1).drop("V15", axis=1).drop("V20", axis=1).drop("V22", axis=1).drop("V23", axis=1)\
+        .drop("V24", axis=1).drop("V25", axis=1).drop("V26", axis=1).drop("V28", axis=1)
 
-    # AUC and ROC measures
-    fpr, tpr, thresholds = metrics.roc_curve(y_test, result)
-    auc = metrics.auc(fpr, tpr)
-    precision = metrics.precision_score(y_test, result)
-    recall = metrics.recall_score(y_test, result)
-    f_score = metrics.f1_score(y_test, result)
+    results = {
+        'accuracy': [],
+        'precision': [],
+        'recall': [],
+        'f': [],
+        'ap': [],
+        'auroc': [],
+        'confusion': [],
+        'fpr': [],
+        'tpr': [],
+        'time': []
+    }
 
-    print('AUROC:', auc)
-    print('Accuracy:', accuracy)
-    print('Precision:', precision)
-    print('Recall:', recall)
-    print('F Score:', f_score)
+    filepath = os.path.join('..', 'results', 'naive_bayes_results.txt')
+    replications = 20
+    for i in range(replications):
+        # Create train and test groups
+        train, test = model_selection.train_test_split(df, test_size=0.2)
+        train, valid = model_selection.train_test_split(train, test_size=0.25)
 
-    average_precision = metrics.average_precision_score(y_test, y_score)
+        # X and Y used for sklearn logreg
+        X = train.drop("Class", axis=1).drop("Time", axis=1)
+        y = train["Class"]
 
-    print('Average precision-recall score: {0:0.2f}'.format(
-        average_precision))
+        nb = NaiveBayes()
+        metrics = nb.bayes(X, y, valid, test)
 
-    precision, recall, _ = metrics.precision_recall_curve(y_test, y_score)
+        results['accuracy'].append(metrics['accuracy'])
+        results['precision'].append(metrics['precision'])
+        results['recall'].append(metrics['recall'])
+        results['f'].append(metrics['f'])
+        results['ap'].append(metrics['ap'])
+        results['auroc'].append(metrics['auroc'])
+        results['confusion'].append(metrics['confusion'])
+        results['fpr'].append(metrics['fpr'])
+        results['tpr'].append(metrics['tpr'])
+        results['time'].append(metrics['time'])
 
-    plt.step(recall, precision, color='b', alpha=0.2,
-             where='post')
-    plt.fill_between(recall, precision, step='post', alpha=0.2,
-                     color='b')
+    with open(filepath, 'w') as f:
+        f.write('Accuracy: ' + str(results['accuracy']) + ': ' + str(np.mean(results['accuracy'])) + ': ' + str(np.std(results['accuracy'])) + '\n')
+        f.write('Precision: ' + str(results['precision']) + ': ' + str(np.mean(results['precision'])) + ': ' + str(np.std(results['precision'])) + '\n')
+        f.write('Recall: ' + str(results['recall']) + ': ' + str(np.mean(results['recall'])) + ': ' + str(np.std(results['recall'])) + '\n')
+        f.write('F-score: ' + str(results['f']) + ': ' + str(np.mean(results['f'])) + ': ' + str(np.std(results['f'])) + '\n')
+        f.write('AP: ' + str(results['ap']) + ': ' + str(np.mean(results['ap'])) + ': ' + str(np.std(results['ap'])) + '\n')
+        f.write('AUROC: ' + str(results['auroc']) + ': ' + str(np.mean(results['auroc'])) + ': ' + str(np.std(results['auroc'])) + '\n')
+        f.write('Time (sec): ' + str(results['time']) + ': ' + str(np.mean(results['time'])) + ': ' + str(np.std(results['time'])) + '\n')
 
-    plt.xlabel('Recall')
-    plt.ylabel('Precision')
-    plt.ylim([0.0, 1.05])
-    plt.xlim([0.0, 1.0])
-    plt.title('Naive Bayes 2-class Precision-Recall curve: AP={0:0.2f}'.format(
-        average_precision))
-
-    # Plot ROC
-    plt.figure()
-    lw = 2
-    plt.plot(fpr, tpr, color='darkorange',
-             lw=lw, label='ROC curve (area = %0.2f)' % auc)
-    plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
-    plt.xlim([0.0, 1.0])
-    plt.ylim([0.0, 1.05])
-    plt.xlabel('False Positive Rate')
-    plt.ylabel('True Positive Rate')
-    plt.title('Naive Bayes ROC')
-    plt.legend(loc="lower right")
-    plt.show()
-
-    #return results, accuracy, confusion
-
-#path = os.path.abspath(os.path.join(os.getcwd(), os.pardir))
-#path += '/data/creditcard.csv'
-
-# Read in data through command line argument
-df = pd.read_csv(sys.argv[1])
-df = df.drop("V13", axis=1).drop("V15", axis=1).drop("V20", axis=1).drop("V22", axis=1).drop("V23", axis=1)\
-    .drop("V24", axis=1).drop("V25", axis=1).drop("V26", axis=1).drop("V28", axis=1)
-X = df.drop("Class",axis=1).drop("Time",axis=1)
-Y = df["Class"]
-df = df.values;
-
-x_train, x_test, y_train, y_test = train_test_split(X,Y,test_size=0.2)
-
-naive_bayes(x_train,x_test,y_train,y_test)
+if __name__ == '__main__':
+    main()

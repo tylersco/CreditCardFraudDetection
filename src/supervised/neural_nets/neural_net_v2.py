@@ -1,5 +1,7 @@
 import sys
 sys.path.append('../../data/')
+import os
+import time
 
 import tensorflow as tf
 import numpy as np
@@ -56,103 +58,142 @@ with tf.Session() as sess:
     # Read in data from each class and create train/test splits
     x_genuine, y_genuine, x_fraudulent, y_fraudulent = load_data(sys.argv[1], [0, 13, 15, 20, 22, 23, 24, 25, 26, 28])
 
-    x_gen_train, x_gen_test, y_gen_train, y_gen_test = train_test_split(x_genuine, y_genuine, test_size=0.2)
-    x_gen_train, x_gen_valid, y_gen_train, y_gen_valid = train_test_split(x_gen_train, y_gen_train, test_size=0.2)
+    results = {
+        'accuracy': [],
+        'precision': [],
+        'recall': [],
+        'f': [],
+        'ap': [],
+        'auroc': [],
+        'confusion': [],
+        'fpr': [],
+        'tpr': [],
+        'time': []
+    }
 
-    x_fra_train, x_fra_test, y_fra_train, y_fra_test = train_test_split(x_fraudulent, y_fraudulent, test_size=0.2)
-    x_fra_train, x_fra_valid, y_fra_train, y_fra_valid = train_test_split(x_fra_train, y_fra_train, test_size=0.2)
+    replications = 20
+    filepath = os.path.join('..', '..', 'results', 'neural_net_results.txt')
+    for i in range(replications):
 
-    x_train = np.concatenate((x_gen_train, x_fra_train))
-    y_train = np.concatenate((y_gen_train, y_fra_train))
+        x_gen_train, x_gen_test, y_gen_train, y_gen_test = train_test_split(x_genuine, y_genuine, test_size=0.2)
+        x_gen_train, x_gen_valid, y_gen_train, y_gen_valid = train_test_split(x_gen_train, y_gen_train, test_size=0.25)
 
-    x_valid = np.concatenate((x_gen_valid, x_fra_valid))
-    y_valid = np.concatenate((y_gen_valid, y_fra_valid))
+        x_fra_train, x_fra_test, y_fra_train, y_fra_test = train_test_split(x_fraudulent, y_fraudulent, test_size=0.2)
+        x_fra_train, x_fra_valid, y_fra_train, y_fra_valid = train_test_split(x_fra_train, y_fra_train, test_size=0.25)
 
-    x_test = np.concatenate((x_gen_test, x_fra_test))
-    y_test = np.concatenate((y_gen_test, y_fra_test))
+        x_train = np.concatenate((x_gen_train, x_fra_train))
+        y_train = np.concatenate((y_gen_train, y_fra_train))
 
-    learning_rate = 0.005
-    epochs = 300
-    minibatch_size = 256
+        x_valid = np.concatenate((x_gen_valid, x_fra_valid))
+        y_valid = np.concatenate((y_gen_valid, y_fra_valid))
 
-    sess.run(init)
-    sess.run(init2)
+        x_test = np.concatenate((x_gen_test, x_fra_test))
+        y_test = np.concatenate((y_gen_test, y_fra_test))
 
-    for epoch in range(epochs):
-        # Shuffle the data
-        shuffle = np.random.permutation(len(y_train))
-        x_train, y_train = x_train[shuffle], y_train[shuffle]
+        learning_rate = 0.005
+        epochs = 300
+        minibatch_size = 256
 
-        for i in range(0, len(y_train), minibatch_size):
-            x_train_mb, y_train_mb = x_train[i:i + minibatch_size], y_train[i:i + minibatch_size]
+        start = time.time()
+        sess.run(init)
+        sess.run(init2)
 
-            train_data = {X: x_train_mb, Y_: y_train_mb, lr: learning_rate}
+        for epoch in range(epochs):
+            # Shuffle the data
+            shuffle = np.random.permutation(len(y_train))
+            x_train, y_train = x_train[shuffle], y_train[shuffle]
 
-            # Train
-            sess.run(optimizer, feed_dict=train_data)
+            for i in range(0, len(y_train), minibatch_size):
+                x_train_mb, y_train_mb = x_train[i:i + minibatch_size], y_train[i:i + minibatch_size]
 
-        if epoch % 50 == 0:
-            train_data = {X: x_train, Y_: y_train}
-            acc, c, auroc, rec, prec  = sess.run([accuracy, cost, roc_auc, recall, precision], feed_dict=train_data)
-            pred, pred_round = sess.run([Y_pred, Y_pred_round], feed_dict=train_data)
-            average_precision = metrics.average_precision_score(y_train, pred)
-            f_score = metrics.f1_score(y_train, pred_round)
-            print('Average Precision:', average_precision)
-            print('F Score:', f_score)
-            print('Train accuracy: {0}, Cost: {1}, AUROC: {2}, Recall: {3}, Precision: {4}'.format(acc, c, auroc, rec, prec) + '\n')
+                train_data = {X: x_train_mb, Y_: y_train_mb, lr: learning_rate}
 
-        if epoch % 50 == 0:
-            valid_data = {X: x_valid, Y_: y_valid}
-            acc, c, auroc, rec, prec = sess.run([accuracy, cost, roc_auc, recall, precision], feed_dict=valid_data)
-            pred, pred_round = sess.run([Y_pred, Y_pred_round], feed_dict=valid_data)
-            average_precision = metrics.average_precision_score(y_valid, pred)
-            f_score = metrics.f1_score(y_valid, pred_round)
-            print('Average Precision:', average_precision)
-            print('F Score:', f_score)
-            print('Valid accuracy: {0}, Cost: {1}, AUROC: {2}, Recall: {3}, Precision: {4}'.format(acc, c, auroc, rec, prec) + '\n')
+                # Train
+                sess.run(optimizer, feed_dict=train_data)
 
-    valid_data = {X: x_valid, Y_: y_valid}
-    acc, c, auroc  = sess.run([accuracy, cost, roc_auc], feed_dict=valid_data)
-    pred, pred_round = sess.run([Y_pred, Y_pred_round], feed_dict=valid_data)
-    average_precision = metrics.average_precision_score(y_valid, pred)
-    f_score = metrics.f1_score(y_valid, pred_round)
-    print('Average Precision:', average_precision)
-    print('F Score:', f_score)
-    print('Valid accuracy: {0}, Cost: {1}, AUROC: {2}, Recall: {3}, Precision: {4}'.format(acc, c, auroc, rec, prec) + '\n')
+            if epoch % 100 == 0:
+                train_data = {X: x_train, Y_: y_train}
+                acc, c, auroc, rec, prec  = sess.run([accuracy, cost, roc_auc, recall, precision], feed_dict=train_data)
+                pred, pred_round = sess.run([Y_pred, Y_pred_round], feed_dict=train_data)
+                average_precision = metrics.average_precision_score(y_train, pred)
+                f_score = metrics.f1_score(y_train, pred_round)
+                print('Average Precision:', average_precision)
+                print('F Score:', f_score)
+                print('Train accuracy: {0}, Cost: {1}, AUROC: {2}, Recall: {3}, Precision: {4}'.format(acc, c, auroc, rec, prec) + '\n')
 
-    test_data = {X: x_test, Y_: y_test}
-    acc, c, auroc, rec, prec = sess.run([accuracy, cost, roc_auc, recall, precision], feed_dict=test_data)
-    pred, pred_round = sess.run([Y_pred, Y_pred_round], feed_dict=test_data)
-    average_precision = metrics.average_precision_score(y_test, pred)
-    f_score = metrics.f1_score(y_test, pred_round)
-    print('Average Precision:', average_precision)
-    print('F Score:', f_score)
-    print('Test accuracy: {0}, Cost: {1}, AUROC: {2}, Recall: {3}, Precision: {4}'.format(acc, c, auroc, rec, prec) + '\n')
+        end = time.time()
 
+            # VALIDATION
+            # if epoch % 50 == 0:
+            #     valid_data = {X: x_valid, Y_: y_valid}
+            #     acc, c, auroc, rec, prec = sess.run([accuracy, cost, roc_auc, recall, precision], feed_dict=valid_data)
+            #     pred, pred_round = sess.run([Y_pred, Y_pred_round], feed_dict=valid_data)
+            #     average_precision = metrics.average_precision_score(y_valid, pred)
+            #     f_score = metrics.f1_score(y_valid, pred_round)
+            #     print('Average Precision:', average_precision)
+            #     print('F Score:', f_score)
+            #     print('Valid accuracy: {0}, Cost: {1}, AUROC: {2}, Recall: {3}, Precision: {4}'.format(acc, c, auroc, rec, prec) + '\n')
 
-    precision, recall, _ = metrics.precision_recall_curve(y_test, pred)
-    plt.step(recall, precision, color='b', alpha=0.2,
-                 where='post')
-    plt.fill_between(recall, precision, step='post', alpha=0.2,
-                     color='b')
+        # valid_data = {X: x_valid, Y_: y_valid}
+        # acc, c, auroc  = sess.run([accuracy, cost, roc_auc], feed_dict=valid_data)
+        # pred, pred_round = sess.run([Y_pred, Y_pred_round], feed_dict=valid_data)
+        # average_precision = metrics.average_precision_score(y_valid, pred)
+        # f_score = metrics.f1_score(y_valid, pred_round)
+        # print('Average Precision:', average_precision)
+        # print('F Score:', f_score)
+        # print('Valid accuracy: {0}, Cost: {1}, AUROC: {2}, Recall: {3}, Precision: {4}'.format(acc, c, auroc, rec, prec) + '\n')
 
-    plt.xlabel('Recall')
-    plt.ylabel('Precision')
-    plt.ylim([0.0, 1.05])
-    plt.xlim([0.0, 1.0])
-    plt.title('Neural Network 2-class Precision-Recall curve: AP={0:0.2f}'.format(
-        average_precision))
+        test_data = {X: x_test, Y_: y_test}
+        acc, c, auroc, rec, prec = sess.run([accuracy, cost, roc_auc, recall, precision], feed_dict=test_data)
+        pred, pred_round = sess.run([Y_pred, Y_pred_round], feed_dict=test_data)
+        average_precision = metrics.average_precision_score(y_test, pred)
+        f_score = metrics.f1_score(y_test, pred_round)
+        print('Average Precision:', average_precision)
+        print('F Score:', f_score)
+        print('Test accuracy: {0}, Cost: {1}, AUROC: {2}, Recall: {3}, Precision: {4}'.format(acc, c, auroc, rec, prec) + '\n')
 
-    fpr, tpr, _ = metrics.roc_curve(y_test, pred)
-    plt.figure()
-    lw = 2
-    plt.plot(fpr, tpr, color='darkorange',
-             lw=lw, label='ROC curve (area = %0.2f)' % auroc[0])
-    plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
-    plt.xlim([0.0, 1.0])
-    plt.ylim([0.0, 1.05])
-    plt.xlabel('False Positive Rate')
-    plt.ylabel('True Positive Rate')
-    plt.title('Neural Network ROC')
-    plt.legend(loc="lower right")
-    plt.show()
+        results['accuracy'].append(acc)
+        results['auroc'].append(auroc[1])
+        results['recall'].append(rec[1])
+        results['precision'].append(prec[1])
+        results['ap'].append(average_precision)
+        results['f'].append(f_score)
+        results['time'].append(end - start)
+
+    print(results)
+
+    with open(filepath, 'w') as f:
+        f.write('Accuracy: ' + str(results['accuracy']) + ': ' + str(np.mean(results['accuracy'])) + ': ' + str(np.std(results['accuracy'])) + '\n')
+        f.write('Precision: ' + str(results['precision']) + ': ' + str(np.mean(results['precision'])) + ': ' + str(np.std(results['precision'])) + '\n')
+        f.write('Recall: ' + str(results['recall']) + ': ' + str(np.mean(results['recall'])) + ': ' + str(np.std(results['recall'])) + '\n')
+        f.write('F-score: ' + str(results['f']) + ': ' + str(np.mean(results['f'])) + ': ' + str(np.std(results['f'])) + '\n')
+        f.write('AP: ' + str(results['ap']) + ': ' + str(np.mean(results['ap'])) + ': ' + str(np.std(results['ap'])) + '\n')
+        f.write('AUROC: ' + str(results['auroc']) + ': ' + str(np.mean(results['auroc'])) + ': ' + str(np.std(results['auroc'])) + '\n')
+        f.write('Time (sec): ' + str(results['time']) + ': ' + str(np.mean(results['time'])) + ': ' + str(np.std(results['time'])) + '\n')
+
+    # precision, recall, _ = metrics.precision_recall_curve(y_test, pred)
+    # plt.step(recall, precision, color='b', alpha=0.2,
+    #              where='post')
+    # plt.fill_between(recall, precision, step='post', alpha=0.2,
+    #                  color='b')
+    #
+    # plt.xlabel('Recall')
+    # plt.ylabel('Precision')
+    # plt.ylim([0.0, 1.05])
+    # plt.xlim([0.0, 1.0])
+    # plt.title('Neural Network 2-class Precision-Recall curve: AP={0:0.2f}'.format(
+    #     average_precision))
+    #
+    # fpr, tpr, _ = metrics.roc_curve(y_test, pred)
+    # plt.figure()
+    # lw = 2
+    # plt.plot(fpr, tpr, color='darkorange',
+    #          lw=lw, label='ROC curve (area = %0.2f)' % auroc[0])
+    # plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
+    # plt.xlim([0.0, 1.0])
+    # plt.ylim([0.0, 1.05])
+    # plt.xlabel('False Positive Rate')
+    # plt.ylabel('True Positive Rate')
+    # plt.title('Neural Network ROC')
+    # plt.legend(loc="lower right")
+    # plt.show()

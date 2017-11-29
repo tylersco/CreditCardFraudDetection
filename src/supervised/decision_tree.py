@@ -1,46 +1,15 @@
 import sys
+import os
+import time
 import pandas as pd
+import numpy as np
 from sklearn import metrics, model_selection
 import matplotlib.pyplot as plt
-
+from classifier import Classifier
 from sklearn import tree
 
-class DecisionTree:
-    def plot_precision_recall(self, y_test, y_score):
-        average_precision = metrics.average_precision_score(y_test, y_score)
-
-        print('Average precision-recall score: {0:0.2f}'.format(
-            average_precision))
-
-        precision, recall, _ = metrics.precision_recall_curve(y_test, y_score)
-
-        plt.step(recall, precision, color='b', alpha=0.2,
-                 where='post')
-        plt.fill_between(recall, precision, step='post', alpha=0.2,
-                         color='b')
-
-        plt.xlabel('Recall')
-        plt.ylabel('Precision')
-        plt.ylim([0.0, 1.05])
-        plt.xlim([0.0, 1.0])
-        plt.title('Decision Tree 2-class Precision-Recall curve: AP={0:0.2f}'.format(
-            average_precision))
-
-    def plotROC(self, fpr, tpr, auc):
-        plt.figure()
-        lw = 2
-        plt.plot(fpr, tpr, color='darkorange',
-                 lw=lw, label='ROC curve (area = %0.2f)' % auc)
-        plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
-        plt.xlim([0.0, 1.0])
-        plt.ylim([0.0, 1.05])
-        plt.xlabel('False Positive Rate')
-        plt.ylabel('True Positive Rate')
-        plt.title('Decision Tree ROC')
-        plt.legend(loc="lower right")
-        plt.show()
-
-    def decisionTree(self, X, y, test):
+class DecisionTree(Classifier):
+    def decisionTree(self, X, y, valid, test):
 
         '''
             setting criterion to entropy decreased the model precision recall score to 54 percent.
@@ -51,40 +20,70 @@ class DecisionTree:
                 PR above 55 percent.
         '''
 
-        class_weights = {0: 1, 1: 5}
+        class_weights = {0: 1, 1: 8}
 
-        decision_tree = tree.DecisionTreeClassifier(criterion="gini", splitter="best", min_samples_split=60,
+        decision_tree = tree.DecisionTreeClassifier(criterion="gini", splitter="best", min_samples_split=125,
                                                     class_weight=class_weights)
-
+        start = time.time()
         clf = decision_tree.fit(X, y)
+        end = time.time()
 
-        # y_score = log_reg_model.decision_function(test.drop("Class", axis=1).drop("Time", axis=1))
+        # TRAIN DATA
+
+        # y_score = decision_tree.predict_proba(X)[:, 1]
+        # results = decision_tree.predict(X)
+        #
+        # # Get metrics
+        # mets = self.compute_metrics(y, results, y_score)
+        #
+        # print('AUROC:', mets['auroc'])
+        # print('Accuracy:', mets['accuracy'])
+        # print('Precision:', mets['precision'])
+        # print('Recall:', mets['recall'])
+        # print('F Score:', mets['f'])
+        # print('Average Precision', mets['ap'])
+        # print(mets['confusion'])
+
+        # VALID DATA
+
+        # y_score = decision_tree.predict_proba(valid.drop("Class", axis=1).drop("Time", axis=1))[:, 1]
+        # results = decision_tree.predict(valid.drop("Class", axis=1).drop("Time", axis=1))
+        #
+        # # Get metrics
+        # mets = self.compute_metrics(valid["Class"], results, y_score)
+        #
+        # print('AUROC:', mets['auroc'])
+        # print('Accuracy:', mets['accuracy'])
+        # print('Precision:', mets['precision'])
+        # print('Recall:', mets['recall'])
+        # print('F Score:', mets['f'])
+        # print('Average Precision', mets['ap'])
+        # print(mets['confusion'])
+
+        # TEST DATA
+
         y_score = decision_tree.predict_proba(test.drop("Class", axis=1).drop("Time", axis=1))[:, 1]
-
         results = decision_tree.predict(test.drop("Class", axis=1).drop("Time", axis=1))
-        accuracy = decision_tree.score(test.drop("Class", axis=1).drop("Time", axis=1), test["Class"])
-        confusion = metrics.confusion_matrix(test["Class"], results)
 
-        # AUC and ROC measures
-        fpr, tpr, thresholds = metrics.roc_curve(test["Class"], results)
-        auc = metrics.auc(fpr, tpr)
-        precision = metrics.precision_score(test["Class"], results)
-        recall = metrics.recall_score(test["Class"], results)
-        f_score = metrics.f1_score(test["Class"], results)
+        # Get metrics
+        mets = self.compute_metrics(test["Class"], results, y_score)
+        mets['time'] = end - start
 
-        print('AUROC:', auc)
-        print('Accuracy:', accuracy)
-        print('Precision:', precision)
-        print('Recall:', recall)
-        print('F Score:', f_score)
+        print('AUROC:', mets['auroc'])
+        print('Accuracy:', mets['accuracy'])
+        print('Precision:', mets['precision'])
+        print('Recall:', mets['recall'])
+        print('F Score:', mets['f'])
+        print('Average Precision', mets['ap'])
+        print(mets['confusion'], '\n')
 
         # Precision recall measure
-        self.plot_precision_recall(test["Class"], y_score)
+        #self.plot_precision_recall(test["Class"], y_score, 'Decision Tree')
 
         # Plot ROC
-        self.plotROC(fpr, tpr, auc)
+        #self.plotROC(mets['fpr'], mets['tpr'], mets['auroc'], 'Decision Tree')
 
-        return results, accuracy, confusion
+        return mets
 
 
 def main():
@@ -95,20 +94,52 @@ def main():
     df = df.drop("V13", axis=1).drop("V15", axis=1).drop("V20", axis=1).drop("V22", axis=1).drop("V23", axis=1) \
         .drop("V24", axis=1).drop("V25", axis=1).drop("V26", axis=1).drop("V28", axis=1)
 
-    # Create train and test groups
-    train, test = model_selection.train_test_split(df)
+    results = {
+        'accuracy': [],
+        'precision': [],
+        'recall': [],
+        'f': [],
+        'ap': [],
+        'auroc': [],
+        'confusion': [],
+        'fpr': [],
+        'tpr': [],
+        'time': []
+    }
 
-    # X and Y used for sklearn logreg
-    X = train.drop("Class", axis=1).drop("Time", axis=1)
-    y = train["Class"]
+    filepath = os.path.join('..', 'results', 'decision_tree_results.txt')
+    replications = 20
+    for i in range(replications):
+        # Create train and test groups
+        train, test = model_selection.train_test_split(df, test_size=0.2)
+        train, valid = model_selection.train_test_split(train, test_size=0.25)
 
-    decision_tree = DecisionTree()
+        # X and Y used for sklearn logreg
+        X = train.drop("Class", axis=1).drop("Time", axis=1)
+        y = train["Class"]
 
-    total = decision_tree.decisionTree(X, y, test)
-    print(total[0])
-    print(total[1])
-    print(total[2])
+        decision_tree = DecisionTree()
+        metrics = decision_tree.decisionTree(X, y, valid, test)
 
+        results['accuracy'].append(metrics['accuracy'])
+        results['precision'].append(metrics['precision'])
+        results['recall'].append(metrics['recall'])
+        results['f'].append(metrics['f'])
+        results['ap'].append(metrics['ap'])
+        results['auroc'].append(metrics['auroc'])
+        results['confusion'].append(metrics['confusion'])
+        results['fpr'].append(metrics['fpr'])
+        results['tpr'].append(metrics['tpr'])
+        results['time'].append(metrics['time'])
+
+    with open(filepath, 'w') as f:
+        f.write('Accuracy: ' + str(results['accuracy']) + ': ' + str(np.mean(results['accuracy'])) + ': ' + str(np.std(results['accuracy'])) + '\n')
+        f.write('Precision: ' + str(results['precision']) + ': ' + str(np.mean(results['precision'])) + ': ' + str(np.std(results['precision'])) + '\n')
+        f.write('Recall: ' + str(results['recall']) + ': ' + str(np.mean(results['recall'])) + ': ' + str(np.std(results['recall'])) + '\n')
+        f.write('F-score: ' + str(results['f']) + ': ' + str(np.mean(results['f'])) + ': ' + str(np.std(results['f'])) + '\n')
+        f.write('AP: ' + str(results['ap']) + ': ' + str(np.mean(results['ap'])) + ': ' + str(np.std(results['ap'])) + '\n')
+        f.write('AUROC: ' + str(results['auroc']) + ': ' + str(np.mean(results['auroc'])) + ': ' + str(np.std(results['auroc'])) + '\n')
+        f.write('Time (sec): ' + str(results['time']) + ': ' + str(np.mean(results['time'])) + ': ' + str(np.std(results['time'])) + '\n')
 
 if __name__ == '__main__':
     main()
