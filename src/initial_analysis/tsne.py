@@ -20,10 +20,10 @@ from time import time
 
 def main():
 
-    df = pd.read_csv(sys.argv[1])
+    df = pd.read_csv(sys.argv[1]).head(50000)
 
-    df = df.drop("V13", axis=1).drop("V15", axis=1).drop("V20", axis=1).drop("V22", axis=1).drop("V23", axis=1) \
-        .drop("V24", axis=1).drop("V25", axis=1).drop("V26", axis=1).drop("V28", axis=1).head(50000)
+    # df = df.drop("V13", axis=1).drop("V15", axis=1).drop("V20", axis=1).drop("V22", axis=1).drop("V23", axis=1) \
+    #     .drop("V24", axis=1).drop("V25", axis=1).drop("V26", axis=1).drop("V28", axis=1).head(50000)
 
     t0 = time()
 
@@ -32,8 +32,12 @@ def main():
     # tsne = manifold.TSNE(n_components=2, init='random', random_state=0)
     plt.figure()
     plt.scatter(X_tsne[:, 0], X_tsne[:, 1], c=df['Class'])
+    plt.xlabel("x-tsne-pca")
+    plt.ylabel("y-tsne-pca")
 
     t1 = time()
+
+    plt.savefig('tsne_300kpoints_1500iterations_partialfeature.png', bbox_inches='tight')
 
     print(t1-t0)
     plt.show()
