@@ -36,7 +36,7 @@ def main():
     plt.scatter(X_tsne[:, 0], X_tsne[:, 1], c=df_new['Class'])
     plt.xlabel("x-tsne")
     plt.ylabel("y-tsne")
-    plt.title('T-SNE on Credit Card Fraud Detection Dataset')
+    plt.title('T-SNE on Reduced Credit Card Fraud Detection Dataset')
 
     purple_patch = mpatches.Patch(color='purple', label='Genuine')
     yellow_patch = mpatches.Patch(color='yellow', label='Fraudulent')
