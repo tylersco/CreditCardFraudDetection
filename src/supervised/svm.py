@@ -9,56 +9,36 @@ from classifier import Classifier
 
 class support_Vector_Machine(Classifier):
     def svm(self, X, y, valid, test):
-        '''
-        The “balanced” mode uses the values of y to automatically adjust weights inversely proportional to class
-            frequencies in the input data as n_samples / (n_classes * np.bincount(y)).
-        '''
-        class_weights = {0: 1, 1: 8}
-        svm_model = svm.SVC(class_weight=class_weights, C=10.0, max_iter=500,probability=True)
+
+        class_weights = {0: 2, 1: 10}
+        svm_model = svm.SVC(kernel='rbf', class_weight=class_weights, C=1.0, max_iter=500,probability=True)
         start = time.time()
         svm_model.fit(X, y)
         end = time.time()
 
         # TRAIN DATA
 
-        # y_score = log_reg_model.predict_proba(X)[:, 1]
-        # results = log_reg_model.predict(X)
-        #
-        # # Get metrics
-        # mets = self.compute_metrics(y, results, y_score)
-        #
-        # print('AUROC:', mets['auroc'])
-        # print('Accuracy:', mets['accuracy'])
-        # print('Precision:', mets['precision'])
-        # print('Recall:', mets['recall'])
-        # print('F Score:', mets['f'])
-        # print('Average Precision', mets['ap'])
-        # print(mets['confusion'])
-
-        # VALID DATA
-
-        # y_score = log_reg_model.predict_proba(valid.drop("Class", axis=1).drop("Time", axis=1))[:, 1]
-        # results = log_reg_model.predict(valid.drop("Class", axis=1).drop("Time", axis=1))
-        #
-        # # Get metrics
-        # mets = self.compute_metrics(valid["Class"], results, y_score)
-        #
-        # print('AUROC:', mets['auroc'])
-        # print('Accuracy:', mets['accuracy'])
-        # print('Precision:', mets['precision'])
-        # print('Recall:', mets['recall'])
-        # print('F Score:', mets['f'])
-        # print('Average Precision', mets['ap'])
-        # print(mets['confusion'])
-
-        # TEST DATA
-
-        y_score = svm_model.predict_proba(test.drop("Class", axis=1).drop("Time", axis=1))[:, 1]
-        results = svm_model.predict(test.drop("Class", axis=1).drop("Time", axis=1))
+        y_score = svm_model.predict_proba(X)[:, 1]
+        results = svm_model.predict(X)
 
         # Get metrics
-        mets = self.compute_metrics(test["Class"], results, y_score)
-        mets['time'] = end - start
+        mets = self.compute_metrics(y, results, y_score)
+
+        print('AUROC:', mets['auroc'])
+        print('Accuracy:', mets['accuracy'])
+        print('Precision:', mets['precision'])
+        print('Recall:', mets['recall'])
+        print('F Score:', mets['f'])
+        print('Average Precision', mets['ap'])
+        print(mets['confusion'])
+
+        #VALID DATA
+
+        y_score = svm_model.predict_proba(valid.drop("Class", axis=1).drop("Time", axis=1))[:, 1]
+        results = svm_model.predict(valid.drop("Class", axis=1).drop("Time", axis=1))
+
+        # Get metrics
+        mets = self.compute_metrics(valid["Class"], results, y_score)
 
         print('AUROC:', mets['auroc'])
         print('Accuracy:', mets['accuracy'])
@@ -67,14 +47,33 @@ class support_Vector_Machine(Classifier):
         print('F Score:', mets['f'])
         print('Average Precision', mets['ap'])
         print(mets['confusion'], '\n')
-
-        # Precision recall measure
-        #self.plot_precision_recall(test["Class"], y_score, 'Logistic Regression')
-
-        # Plot ROC
-        #self.plotROC(mets['fpr'], mets['tpr'], mets['auroc'], 'Logistic Regression')
-
         return mets
+
+
+        # TEST DATA
+
+        # y_score = svm_model.predict_proba(test.drop("Class", axis=1).drop("Time", axis=1))[:, 1]
+        # results = svm_model.predict(test.drop("Class", axis=1).drop("Time", axis=1))
+        #
+        # # Get metrics
+        # mets = self.compute_metrics(test["Class"], results, y_score)
+        # mets['time'] = end - start
+        #
+        # print('AUROC:', mets['auroc'])
+        # print('Accuracy:', mets['accuracy'])
+        # print('Precision:', mets['precision'])
+        # print('Recall:', mets['recall'])
+        # print('F Score:', mets['f'])
+        # print('Average Precision', mets['ap'])
+        # print(mets['confusion'], '\n')
+        #
+        # # Precision recall measure
+        # #self.plot_precision_recall(test["Class"], y_score, 'Logistic Regression')
+        #
+        # # Plot ROC
+        # #self.plotROC(mets['fpr'], mets['tpr'], mets['auroc'], 'Logistic Regression')
+        #
+        # return mets
 
 
 def main():
@@ -113,25 +112,26 @@ def main():
         SVM = support_Vector_Machine()
         metrics = SVM.svm(X, y, valid, test)
 
-        results['accuracy'].append(metrics['accuracy'])
-        results['precision'].append(metrics['precision'])
-        results['recall'].append(metrics['recall'])
-        results['f'].append(metrics['f'])
-        results['ap'].append(metrics['ap'])
-        results['auroc'].append(metrics['auroc'])
-        results['confusion'].append(metrics['confusion'])
-        results['fpr'].append(metrics['fpr'])
-        results['tpr'].append(metrics['tpr'])
-        results['time'].append(metrics['time'])
+        # results['accuracy'].append(metrics['accuracy'])
+        # results['precision'].append(metrics['precision'])
+        # results['recall'].append(metrics['recall'])
+        # results['f'].append(metrics['f'])
+        # results['ap'].append(metrics['ap'])
+        # results['auroc'].append(metrics['auroc'])
+        # results['confusion'].append(metrics['confusion'])
+        # results['fpr'].append(metrics['fpr'])
+        # results['tpr'].append(metrics['tpr'])
+        # results['time'].append(metrics['time'])
 
-    with open(filepath, 'w') as f:
-        f.write('Accuracy: ' + str(results['accuracy']) + ': ' + str(np.mean(results['accuracy'])) + ': ' + str(np.std(results['accuracy'])) + '\n')
-        f.write('Precision: ' + str(results['precision']) + ': ' + str(np.mean(results['precision'])) + ': ' + str(np.std(results['precision'])) + '\n')
-        f.write('Recall: ' + str(results['recall']) + ': ' + str(np.mean(results['recall'])) + ': ' + str(np.std(results['recall'])) + '\n')
-        f.write('F-score: ' + str(results['f']) + ': ' + str(np.mean(results['f'])) + ': ' + str(np.std(results['f'])) + '\n')
-        f.write('AP: ' + str(results['ap']) + ': ' + str(np.mean(results['ap'])) + ': ' + str(np.std(results['ap'])) + '\n')
-        f.write('AUROC: ' + str(results['auroc']) + ': ' + str(np.mean(results['auroc'])) + ': ' + str(np.std(results['auroc'])) + '\n')
-        f.write('Time (sec): ' + str(results['time']) + ': ' + str(np.mean(results['time'])) + ': ' + str(np.std(results['time'])) + '\n')
+
+    # with open(filepath, 'w') as f:
+    #     f.write('Accuracy: ' + str(results['accuracy']) + ': ' + str(np.mean(results['accuracy'])) + ': ' + str(np.std(results['accuracy'])) + '\n')
+    #     f.write('Precision: ' + str(results['precision']) + ': ' + str(np.mean(results['precision'])) + ': ' + str(np.std(results['precision'])) + '\n')
+    #     f.write('Recall: ' + str(results['recall']) + ': ' + str(np.mean(results['recall'])) + ': ' + str(np.std(results['recall'])) + '\n')
+    #     f.write('F-score: ' + str(results['f']) + ': ' + str(np.mean(results['f'])) + ': ' + str(np.std(results['f'])) + '\n')
+    #     f.write('AP: ' + str(results['ap']) + ': ' + str(np.mean(results['ap'])) + ': ' + str(np.std(results['ap'])) + '\n')
+    #     f.write('AUROC: ' + str(results['auroc']) + ': ' + str(np.mean(results['auroc'])) + ': ' + str(np.std(results['auroc'])) + '\n')
+    #     f.write('Time (sec): ' + str(results['time']) + ': ' + str(np.mean(results['time'])) + ': ' + str(np.std(results['time'])) + '\n')
 
 if __name__ == '__main__':
     main()
