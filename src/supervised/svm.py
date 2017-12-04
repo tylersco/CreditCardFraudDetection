@@ -10,8 +10,8 @@ from classifier import Classifier
 class support_Vector_Machine(Classifier):
     def svm(self, X, y, valid, test):
 
-        class_weights = {0: 2, 1: 10}
-        svm_model = svm.SVC(kernel='rbf', class_weight=class_weights, C=1.0, max_iter=500,probability=True)
+        class_weights = {0: 1, 1: 8}
+        svm_model = svm.SVC(kernel='rbf', class_weight=class_weights, C=1.0, verbose=3, max_iter=1000, probability=True)
         start = time.time()
         svm_model.fit(X, y)
         end = time.time()
@@ -30,12 +30,12 @@ class support_Vector_Machine(Classifier):
         # print('Recall:', mets['recall'])
         # print('F Score:', mets['f'])
         # print('Average Precision', mets['ap'])
-        # print(mets['confusion'])
-        #
-        # #VALID DATA
-        #
-        # y_score = svm_model.predict_proba(valid.drop("Class", axis=1).drop("Time", axis=1))[:, 1]
-        # results = svm_model.predict(valid.drop("Class", axis=1).drop("Time", axis=1))
+        # print(mets['confusion'], '\n')
+
+        #VALID DATA
+
+        # y_score = svm_model.predict_proba(valid.drop("Class", axis=1))[:, 1]
+        # results = svm_model.predict(valid.drop("Class", axis=1))
         #
         # # Get metrics
         # mets = self.compute_metrics(valid["Class"], results, y_score)
@@ -49,11 +49,10 @@ class support_Vector_Machine(Classifier):
         # print(mets['confusion'], '\n')
         # return mets
 
-
         # TEST DATA
 
-        y_score = svm_model.predict_proba(test.drop("Class", axis=1).drop("Time", axis=1))[:, 1]
-        results = svm_model.predict(test.drop("Class", axis=1).drop("Time", axis=1))
+        y_score = svm_model.predict_proba(test.drop("Class", axis=1))[:, 1]
+        results = svm_model.predict(test.drop("Class", axis=1))
 
         # Get metrics
         mets = self.compute_metrics(test["Class"], results, y_score)
@@ -66,13 +65,13 @@ class support_Vector_Machine(Classifier):
         print('F Score:', mets['f'])
         print('Average Precision', mets['ap'])
         print(mets['confusion'], '\n')
-
-         # Precision recall measure
-        self.plot_precision_recall(test["Class"], y_score, 'Logistic Regression')
-
-        # Plot ROC
-        self.plotROC(mets['fpr'], mets['tpr'], mets['auroc'], 'Logistic Regression')
-
+        #
+        # # Precision recall measure
+        # #self.plot_precision_recall(test["Class"], y_score, 'Logistic Regression')
+        #
+        # # Plot ROC
+        # #self.plotROC(mets['fpr'], mets['tpr'], mets['auroc'], 'Logistic Regression')
+        #
         return mets
 
 
@@ -83,7 +82,7 @@ def main():
 
     # Drop the attributes deemed useless in our preprocessing/initial analysis
     df = df.drop("V13", axis=1).drop("V15", axis=1).drop("V20", axis=1).drop("V22", axis=1).drop("V23", axis=1)\
-        .drop("V24", axis=1).drop("V25", axis=1).drop("V26", axis=1).drop("V28", axis=1)
+        .drop("V24", axis=1).drop("V25", axis=1).drop("V26", axis=1).drop("V28", axis=1).drop('Time', axis=1)
 
     results = {
         'accuracy': [],
@@ -106,7 +105,7 @@ def main():
         train, valid = model_selection.train_test_split(train, test_size=0.25)
 
         # X and Y used for sklearn logreg
-        X = train.drop("Class", axis=1).drop("Time", axis=1)
+        X = train.drop("Class", axis=1)
         y = train["Class"]
 
         SVM = support_Vector_Machine()
