@@ -1,3 +1,7 @@
+'''
+Version 2 of the neural network
+'''
+
 import sys
 sys.path.append('../../data/')
 import os
@@ -12,13 +16,18 @@ from sklearn import metrics
 
 from load_data import load_data
 
+# Input neurons
 I = 20
+# Hidden layer 1 neurons
 H1 = 64
+# Hidden layer 2 neurons
 H2 = 64
+# Output neurons
 O = 1
 
 X = tf.placeholder(tf.float32, [None, I])
 
+# Weights and biases
 W1 = tf.Variable(tf.truncated_normal([I, H1]))
 B1 = tf.Variable(tf.truncated_normal([O]))
 W2 = tf.Variable(tf.truncated_normal([H1, H2]))
@@ -27,6 +36,7 @@ W3 = tf.Variable(tf.truncated_normal([H2, O]))
 B3 = tf.Variable(tf.truncated_normal([O]))
 
 # Model
+# Feedforward pass through the model
 Y1 = tf.nn.tanh(tf.matmul(X, W1) + B1)
 Y2 = tf.nn.tanh(tf.matmul(Y1, W2) + B2)
 Y = tf.matmul(Y2, W3) + B3
@@ -46,6 +56,7 @@ precision = tf.metrics.precision(Y_, Y_pred_round)
 #pr_auc = tf.metrics.auc(Y_, Y_pred, curve='PR', num_thresholds=200, name='pr_auc')
 #confusion_matrix = tf.contrib.metrics.confusion_matrix(labels=tf.squeeze(Y_), predictions=tf.squeeze(Y_pred_round), num_classes=2, name='confusion_matrix')
 
+# Loss function and associated optimizer
 lr = tf.placeholder(tf.float32)
 cost = tf.reduce_mean(tf.nn.weighted_cross_entropy_with_logits(logits=Y, targets=Y_, pos_weight=5))
 optimizer = tf.train.AdamOptimizer(learning_rate=lr).minimize(cost)
@@ -75,12 +86,15 @@ with tf.Session() as sess:
     filepath = os.path.join('..', '..', 'results', 'neural_net_results.txt')
     for i in range(replications):
 
+        # Split genuine and fraudulent transactions
         x_gen_train, x_gen_test, y_gen_train, y_gen_test = train_test_split(x_genuine, y_genuine, test_size=0.2)
         x_gen_train, x_gen_valid, y_gen_train, y_gen_valid = train_test_split(x_gen_train, y_gen_train, test_size=0.25)
 
         x_fra_train, x_fra_test, y_fra_train, y_fra_test = train_test_split(x_fraudulent, y_fraudulent, test_size=0.2)
         x_fra_train, x_fra_valid, y_fra_train, y_fra_valid = train_test_split(x_fra_train, y_fra_train, test_size=0.25)
 
+
+        # Create train, validation, and test datasets
         x_train = np.concatenate((x_gen_train, x_fra_train))
         y_train = np.concatenate((y_gen_train, y_fra_train))
 
@@ -152,6 +166,7 @@ with tf.Session() as sess:
         print('F Score:', f_score)
         print('Test accuracy: {0}, Cost: {1}, AUROC: {2}, Recall: {3}, Precision: {4}'.format(acc, c, auroc, rec, prec) + '\n')
 
+        # Store test metrics
         results['accuracy'].append(acc)
         results['auroc'].append(auroc[1])
         results['recall'].append(rec[1])
@@ -162,6 +177,7 @@ with tf.Session() as sess:
 
     print(results)
 
+    # Write results to file
     with open(filepath, 'w') as f:
         f.write('Accuracy: ' + str(results['accuracy']) + ': ' + str(np.mean(results['accuracy'])) + ': ' + str(np.std(results['accuracy'])) + '\n')
         f.write('Precision: ' + str(results['precision']) + ': ' + str(np.mean(results['precision'])) + ': ' + str(np.std(results['precision'])) + '\n')

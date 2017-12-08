@@ -3,7 +3,9 @@ import pandas as pd
 from sklearn import metrics
 import matplotlib.pyplot as plt
 
+# Generic classifier class
 class Classifier:
+    # Plot precision recall curve
     def plot_precision_recall(self, y_test, y_score, model_name):
         average_precision = metrics.average_precision_score(y_test, y_score)
 
@@ -21,6 +23,7 @@ class Classifier:
         plt.title('{0} 2-class Precision-Recall curve: AP={1:0.2f}'.format(model_name,
             average_precision))
 
+    # Plot ROC curve
     def plotROC(self, fpr, tpr, auc, model_name):
         plt.figure()
         lw = 2
@@ -35,6 +38,7 @@ class Classifier:
         plt.legend(loc="lower right")
         plt.show()
 
+    # Compute metrics for a classifier
     def compute_metrics(self, y_true, y_pred, y_score):
         fpr, tpr, thresholds = metrics.roc_curve(y_true, y_pred)
         auc = metrics.auc(fpr, tpr)

@@ -8,12 +8,15 @@ from sklearn import metrics, model_selection, ensemble
 import matplotlib.pyplot as plt
 from classifier import Classifier
 
+# Random forest classifier
 class RandomForest(Classifier):
     def random_forest(self, X, y, valid, test):
         '''
         n_jobs -1 uses all available cores
         '''
+        # Weights associated with each class
         class_weights = {0: 1, 1: 8}
+        # Run random forest classifier
         rf = ensemble.RandomForestClassifier(n_estimators=30, criterion='gini', min_samples_split=12, n_jobs=-1, class_weight=class_weights)
         start = time.time()
         rf.fit(X, y)
@@ -105,7 +108,6 @@ def main():
         train, test = model_selection.train_test_split(df, test_size=0.2)
         train, valid = model_selection.train_test_split(train, test_size=0.25)
 
-        # X and Y used for sklearn logreg
         X = train.drop("Class", axis=1).drop("Time", axis=1)
         y = train["Class"]
 
@@ -123,6 +125,7 @@ def main():
         results['tpr'].append(metrics['tpr'])
         results['time'].append(metrics['time'])
 
+    # Write results to file
     with open(filepath, 'w') as f:
         f.write('Accuracy: ' + str(results['accuracy']) + ': ' + str(np.mean(results['accuracy'])) + ': ' + str(np.std(results['accuracy'])) + '\n')
         f.write('Precision: ' + str(results['precision']) + ': ' + str(np.mean(results['precision'])) + ': ' + str(np.std(results['precision'])) + '\n')

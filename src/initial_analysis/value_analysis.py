@@ -7,7 +7,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 
-
 def main():
 
     path = os.path.abspath(os.path.join(os.getcwd(), os.pardir))
@@ -30,6 +29,7 @@ def main():
 
     print(data)
 
+    # Box plots for data
     plt.boxplot(data)
     plt.title("Genuine Transactions")
     plt.show()
@@ -37,4 +37,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-

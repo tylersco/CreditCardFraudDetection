@@ -21,6 +21,7 @@ def load_data(path, skip_columns=None):
     x_fraudulent = fraudulent[:, :-1]
     y_fraudulent = np.reshape(fraudulent[:, -1], (-1, 1))
 
+    # Columns to remove from dataset
     if skip_columns:
         keep_columns = [i for i in range(np.shape(x_genuine)[1]) if i not in skip_columns]
         x_genuine = x_genuine[:, keep_columns]

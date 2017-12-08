@@ -15,20 +15,19 @@ from matplotlib.ticker import NullFormatter
 from sklearn import manifold, datasets
 from time import time
 
-#do one with reduced data
-#do one with all data
-
-
 def main():
 
     df = pd.read_csv(sys.argv[1])
     df_fraud = df.loc[df['Class'] == 1]
+    # Only sample 50,000 data points
     df_gen = df.loc[df['Class'] == 0].head(50000)
     df_new = pd.concat([df_fraud, df_gen])
+    # Drop uninformative features
     df_new = df_new.drop('Time', axis=1).drop("V13", axis=1).drop("V15", axis=1).drop("V20", axis=1).drop("V22", axis=1).drop("V23", axis=1).drop("V24", axis=1).drop("V25", axis=1).drop("V26", axis=1).drop("V28", axis=1)
 
     t0 = time()
 
+    # Execute t-sne
     X_tsne = manifold.TSNE(learning_rate=500, n_iter=600, verbose=4).fit_transform(df_new.drop('Class', axis=1))
 
     # tsne = manifold.TSNE(n_components=2, init='random', random_state=0)

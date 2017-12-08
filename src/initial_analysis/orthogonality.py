@@ -8,6 +8,7 @@ df1 = df.iloc[:,1:29]
 
 res = []
 
+# Ensure that dot product between pairwise features is orthogonal
 for i in range(0, len(df1.iloc[0,:])):
     r = []
     for j in range(i + 1, len(df1.iloc[0,:])):

@@ -7,14 +7,14 @@ from sklearn import linear_model, metrics, model_selection
 import matplotlib.pyplot as plt
 from classifier import Classifier
 
+# Logistic Regression classifier
 class LogisticRegression(Classifier):
     def logreg(self, X, y, valid, test):
-        '''
-        The “balanced” mode uses the values of y to automatically adjust weights inversely proportional to class
-            frequencies in the input data as n_samples / (n_classes * np.bincount(y)).
-        '''
+        # Weights for each of the two classes
         class_weights = {0: 1, 1: 8}
+        # Run logistic regression classifier
         log_reg_model = linear_model.LogisticRegression(class_weight=class_weights, penalty='l2', C=10.0, max_iter=500)
+
         start = time.time()
         log_reg_model.fit(X, y)
         end = time.time()
@@ -106,7 +106,6 @@ def main():
         train, test = model_selection.train_test_split(df, test_size=0.2)
         train, valid = model_selection.train_test_split(train, test_size=0.25)
 
-        # X and Y used for sklearn logreg
         X = train.drop("Class", axis=1).drop("Time", axis=1)
         y = train["Class"]
 
@@ -124,6 +123,7 @@ def main():
         results['tpr'].append(metrics['tpr'])
         results['time'].append(metrics['time'])
 
+    # Write results to file
     with open(filepath, 'w') as f:
         f.write('Accuracy: ' + str(results['accuracy']) + ': ' + str(np.mean(results['accuracy'])) + ': ' + str(np.std(results['accuracy'])) + '\n')
         f.write('Precision: ' + str(results['precision']) + ': ' + str(np.mean(results['precision'])) + ': ' + str(np.std(results['precision'])) + '\n')

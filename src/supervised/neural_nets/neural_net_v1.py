@@ -1,3 +1,7 @@
+'''
+Version 1 of the neural network
+'''
+
 import sys
 sys.path.append('../../data/')
 
@@ -8,13 +12,18 @@ from sklearn.model_selection import train_test_split
 
 from load_data import load_data
 
+# Input neurons
 I = 30
+# Hidden layer 1 neurons
 H1 = 64
+# Hidden layer 2 neurons
 H2 = 64
+# Output neurons
 O = 1
 
 X = tf.placeholder(tf.float32, [None, I])
 
+# Weights and biases associated with each layer
 W1 = tf.Variable(tf.truncated_normal([I, H1]))
 B1 = tf.Variable(tf.zeros([H1]))
 W2 = tf.Variable(tf.truncated_normal([H1, H2]))
@@ -23,6 +32,7 @@ W3 = tf.Variable(tf.truncated_normal([H2, O]))
 B3 = tf.Variable(tf.zeros([O]))
 
 # Model
+# Feedforward pass through network
 Y1 = tf.nn.relu(tf.matmul(X, W1) + B1)
 Y2 = tf.nn.relu(tf.matmul(Y1, W2) + B2)
 Y = tf.matmul(Y1, W3) + B3
@@ -40,6 +50,7 @@ roc_auc = tf.metrics.auc(Y_, Y_pred, name='roc_auc')
 pr_auc = tf.metrics.auc(Y_, Y_pred, curve='PR', name='pr_auc')
 confusion_matrix = tf.contrib.metrics.confusion_matrix(labels=tf.squeeze(Y_), predictions=tf.squeeze(Y_pred_round), num_classes=2, name='confusion_matrix')
 
+# Loss function and associated optimizer
 lr = tf.placeholder(tf.float32)
 cost = tf.reduce_mean(tf.nn.weighted_cross_entropy_with_logits(logits=Y, targets=Y_, pos_weight=0.95))
 optimizer = tf.train.AdamOptimizer(learning_rate=lr).minimize(cost)
@@ -59,6 +70,8 @@ with tf.Session() as sess:
 
     x_fra_train, x_fra_test, y_fra_train, y_fra_test = train_test_split(x_fraudulent, y_fraudulent, test_size=0.2)
     x_fra_train, x_fra_valid, y_fra_train, y_fra_valid = train_test_split(x_fra_train, y_fra_train, test_size=0.25)
+
+    # Split datasets
 
     x_train = np.concatenate((x_gen_train, x_fra_train))
     y_train = np.concatenate((y_gen_train, y_fra_train))

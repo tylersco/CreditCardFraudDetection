@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 from classifier import Classifier
 from sklearn import tree
 
+# Decision tree classifier
 class DecisionTree(Classifier):
     def decisionTree(self, X, y, valid, test):
 
@@ -15,13 +16,11 @@ class DecisionTree(Classifier):
             setting criterion to entropy decreased the model precision recall score to 54 percent.
 
             setting splitter to random decreased the model precision recall score to 53 percent.
-
-            setting min_samples to 4 decreased the model pr score, however raising it past 8 seems to keep
-                PR above 55 percent.
         '''
-
+        # Weights for each of the classes
         class_weights = {0: 1, 1: 8}
 
+        # Run decision tree classifier
         decision_tree = tree.DecisionTreeClassifier(criterion="gini", splitter="best", min_samples_split=125,
                                                     class_weight=class_weights)
         start = time.time()
@@ -114,7 +113,6 @@ def main():
         train, test = model_selection.train_test_split(df, test_size=0.2)
         train, valid = model_selection.train_test_split(train, test_size=0.25)
 
-        # X and Y used for sklearn logreg
         X = train.drop("Class", axis=1).drop("Time", axis=1)
         y = train["Class"]
 
@@ -132,6 +130,7 @@ def main():
         results['tpr'].append(metrics['tpr'])
         results['time'].append(metrics['time'])
 
+    # Write the results to the file
     with open(filepath, 'w') as f:
         f.write('Accuracy: ' + str(results['accuracy']) + ': ' + str(np.mean(results['accuracy'])) + ': ' + str(np.std(results['accuracy'])) + '\n')
         f.write('Precision: ' + str(results['precision']) + ': ' + str(np.mean(results['precision'])) + ': ' + str(np.std(results['precision'])) + '\n')

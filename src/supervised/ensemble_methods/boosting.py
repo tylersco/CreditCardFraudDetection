@@ -8,10 +8,14 @@ from sklearn import metrics, model_selection, ensemble
 import matplotlib.pyplot as plt
 from classifier import Classifier
 
+# Boosting classifier
 class Boosting(Classifier):
     def adaboost(self, X, y, valid, test):
 
+        # No weights associated with classes for the boosting model
+        # Run boosting model
         boost = ensemble.AdaBoostClassifier(n_estimators=500)
+
         start = time.time()
         clf = boost.fit(X, y)
         end = time.time()
@@ -102,7 +106,6 @@ def main():
         train, test = model_selection.train_test_split(df, test_size=0.2)
         train, valid = model_selection.train_test_split(train, test_size=0.25)
 
-        # X and Y used for sklearn logreg
         X = train.drop("Class", axis=1).drop("Time", axis=1)
         y = train["Class"]
 
@@ -120,6 +123,7 @@ def main():
         results['tpr'].append(metrics['tpr'])
         results['time'].append(metrics['time'])
 
+    # Write results to file
     with open(filepath, 'w') as f:
         f.write('Accuracy: ' + str(results['accuracy']) + ': ' + str(np.mean(results['accuracy'])) + ': ' + str(np.std(results['accuracy'])) + '\n')
         f.write('Precision: ' + str(results['precision']) + ': ' + str(np.mean(results['precision'])) + ': ' + str(np.std(results['precision'])) + '\n')
