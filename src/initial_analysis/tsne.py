@@ -30,7 +30,6 @@ def main():
     # Execute t-sne
     X_tsne = manifold.TSNE(learning_rate=500, n_iter=600, verbose=4).fit_transform(df_new.drop('Class', axis=1))
 
-    # tsne = manifold.TSNE(n_components=2, init='random', random_state=0)
     plt.figure()
     plt.scatter(X_tsne[:, 0], X_tsne[:, 1], c=df_new['Class'])
     plt.xlabel("x-tsne")

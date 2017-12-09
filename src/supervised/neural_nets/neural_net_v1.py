@@ -58,8 +58,6 @@ optimizer = tf.train.AdamOptimizer(learning_rate=lr).minimize(cost)
 init = tf.global_variables_initializer()
 init2 = tf.local_variables_initializer()
 
-saver = tf.train.Saver()
-
 with tf.Session() as sess:
 
     # Read in data from each class and create train/test splits
@@ -122,6 +120,3 @@ with tf.Session() as sess:
     acc, c, auroc, auprc, cf_matrix  = sess.run([accuracy, cost, roc_auc, pr_auc, confusion_matrix], feed_dict=test_data)
     print('Test accuracy: {0}, Cost: {1}, AUROC: {2}, AUPRC: {3}'.format(acc, c, auroc, auprc))
     print(cf_matrix, '\n')
-
-    save_path = saver.save(sess, '../../models/neural_net_v1/neural_net_v1')
-    print("Model saved in file: %s" % save_path)
