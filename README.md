@@ -12,7 +12,7 @@ Data mining project exploring supervised techniques for detecting fraudulent cre
   - Top level of the folder contains the logistic regression, naive Bayes, SVM, and decision tree models
   - `src/supervised/ensemble_methods` contains implementations of the random forest, bagging, and boosting models
   - `src/supervised/neural_nets` contains implementations for 2 versions of the neural network (v2 is the main neural net model)
-* `src/classifier_results.csv` contains the aggregated results from all of the classifiers
+* `src/classifier_results.pdf` contains the aggregated results from all of the classifiers
   - These are the results used in the paper
   
 # Usage
